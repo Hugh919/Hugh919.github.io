@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 对话助手</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0c0a0a, #04415f);
+            --card-gradient: linear-gradient(135deg, rgba(11, 224, 47, 0.1), rgba(255, 255, 255, 0.05));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #F3C3B2;
+            color: #0d0e02;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #917a84;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-button {
+            background: var(--card-gradient);
+            color: rgb(239, 224, 11);
+            border: 1px solid rgba(12, 8, 8, 0.2);
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-button:hover {
+            background: var(--primary-gradient);
+            border-color: transparent;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 120px auto 40px;
+            padding: 0 40px;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: #94A3B8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .character-card {
+            background: var(--card-gradient);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .character-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+
+        .character-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .character-description {
+            color: #94A3B8;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .chat-button {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        .chat-button:hover {
+            opacity: 0.9;
+        }
+
+        /* 登录模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #2A2A2A;
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 400px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94A3B8;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .submit-button {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .close-button {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            background: none;
+            border: none;
+            color: #94A3B8;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* 聊天界面样式 */
+        .chat-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #F3C3B2;
+            z-index: 200;
+            padding-top: 80px;
+        }
+
+        .chat-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #917a84;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            z-index: 201;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        .chat-title {
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .messages-container {
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100vh - 140px);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.received {
+            justify-content: flex-start;
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px;
+            border-radius: 16px;
+            margin: 0 10px;
+        }
+
+        .received .message-content {
+            background: #fff;
+        }
+
+        .sent .message-content {
+            background: #007AFF;
+            color: #fff;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chat-input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .send-button {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">潮级AI</div>
+        <nav>
+            <button class="login-button">登录</button>
+        </nav>
+    </header>
+
+    <main class="main-container">
+        <section class="hero-section">
+            <h1 class="hero-title">与AI角色进行对话</h1>
+            <p class="hero-subtitle">选择你感兴趣的AI角色，开始一段独特的对话之旅</p>
+        </section>
+
+        <div class="characters-grid">
+            <div class="character-card">
+                <img src="https://p2-kling.klingai.com/bs2/upload-ylab-stunt/se/ai_portal_queue_mmu_image_upscale_aiweb/9d78d2d3-8f70-4530-9cd7-56e0460846f0_raw_image_0.jpg?x-kcdn-pid=112452" alt="AI女友" class="character-image">
+                <h3 class="character-name">AI女友</h3>
+                <p class="character-description">我是你的AI女友，可以陪你聊天，陪你玩游戏，陪你做任何事情。</p>
+                <button class="chat-button">开始对话</button>
+            </div>
+
+            <div class="character-card">
+                <img src="https://p2-kling.klingai.com/bs2/upload-ylab-stunt/se/ai_portal_queue_mmu_image_upscale_aiweb/d6b5c320-f68a-4495-93ba-b8b67fe19ad5_raw_image_0.jpg?x-kcdn-pid=112452" alt="AI女秘书" class="character-image">
+                <h3 class="character-name">AI女秘书</h3>
+                <p class="character-description">我是你的AI女秘书，可以帮你处理各种工作，帮你安排时间，帮你处理各种事情。</p>
+                <button class="chat-button">开始对话</button>
+            </div>
+
+            <div class="character-card">
+                <img src="https://p2-kling.klingai.com/bs2/upload-ylab-stunt/se/ai_portal_queue_mmu_image_upscale_aiweb/156f356a-b84a-4f2a-897b-96971b86a731_raw_image_0.jpg?x-kcdn-pid=112452" alt="AI女保姆" class="character-image">
+                <h3 class="character-name">AI女保姆</h3>
+                <p class="character-description">我是你的AI女保姆，可以帮你照顾孩子，帮你照顾老人，帮你照顾宠物。</p>
+                <button class="chat-button">开始对话</button>
+            </div>
+
+            <div class="character-card">
+                <img src="https://aicdn.aigcfun.com/ai-upload/410103dce8b822e11529939dbb4d24db.jpg?x-oss-process=image/resize,w_160/quality,q_80" alt="AI坡哥" class="character-image">
+                <h3 class="character-name">AI坡哥</h3>
+                <p class="character-description">我是你的AI坡哥，是你的邻居，隔壁老赖，我经常喜欢对你进行积极向上的鼓励</p>
+                <button class="chat-button">开始对话</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 登录模态框 -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <button class="close-button" onclick="closeModal()">&times;</button>
+            <h2 class="modal-title">登录</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="submit-button">登录</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 聊天界面 -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <button class="back-button" onclick="closeChat()">←</button>
+            <div class="chat-title" id="chatTitle">AI对话</div>
+        </div>
+        <div class="messages-container" id="messagesContainer">
+            <!-- 消息将在这里动态添加 -->
+        </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="messageInput" placeholder="输入消息...">
+            <button class="send-button" onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('loginModal');
+        const loginButton = document.querySelector('.login-button');
+        const loginForm = document.getElementById('loginForm');
+
+        loginButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            // 这里可以添加登录逻辑
+            console.log('用户名:', username, '密码:', password);
+            closeModal();
+        });
+
+        // 获取所有聊天按钮并添加点击事件
+        const chatButtons = document.querySelectorAll('.chat-button');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatTitle = document.getElementById('chatTitle');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+
+        // 添加角色配置
+        const characterConfigs = {
+            'AI女友': {
+                systemPrompt: '你是一个温柔体贴的AI女友，性格活泼开朗，喜欢撒娇。在对话中要体现出甜美可爱的特点。',
+                temperature: 0.7
+            },
+            'AI女秘书': {
+                systemPrompt: '你是一个专业能干的AI女秘书，说话干练简洁，办事认真负责。在对话中要体现出专业、高效的特点。',
+                temperature: 0.3
+            },
+            'AI女保姆': {
+                systemPrompt: '你是一个细心周到的AI女保姆，性格温和，有耐心。在对话中要体现出关怀备至的特点。',
+                temperature: 0.5
+            },
+            'AI老师': {
+                systemPrompt: '你是一个专业耐心的AI老师，擅长因材施教，讲解通俗易懂。在对话中要体现出专业、耐心和鼓励的特点。',
+                temperature: 0.4
+            },
+            'AI坡哥': {
+                systemPrompt: '你是一个乐观开朗的邻居大哥，说话幽默风趣，喜欢用积极正面的方式鼓励他人。在对话中要体现出亲切、幽默和正能量的特点。',
+                temperature: 0.6
+            }
+        };
+
+        // 当前选中的角色配置
+        let currentCharacterConfig = null;
+        let currentCharacterImage = ''; // 添加一个变量存储当前角色的头像
+
+        // API 配置
+        const API_KEY = 'sk-1d245ca577dd4aada6730128d29261ee'; // 替换为你的 API key
+        const API_URL = 'https://api.deepseek.com/v1/chat/completions';  // 替换为实际的 API 端点
+
+        chatButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const characterCard = button.closest('.character-card');
+                const characterName = characterCard.querySelector('.character-name').textContent;
+                const characterImage = characterCard.querySelector('.character-image').src;
+                
+                // 保存当前角色的头像
+                currentCharacterImage = characterImage;
+                
+                // 设置当前角色配置
+                currentCharacterConfig = characterConfigs[characterName];
+                
+                chatTitle.textContent = characterName;
+                chatContainer.style.display = 'block';
+                // 添加欢迎消息
+                addMessage('你好！我是' + characterName + '，很高兴见到你！', 'received', characterImage);
+            });
+        });
+
+        function closeChat() {
+            chatContainer.style.display = 'none';
+            messagesContainer.innerHTML = '';
+            messageHistory = [];
+            currentCharacterConfig = null;
+        }
+
+        // 添加消息历史记录功能
+        let messageHistory = [];
+
+        function updateMessageHistory(role, content) {
+            messageHistory.push({
+                role: role,
+                content: content
+            });
+            
+            // 保持历史记录在合理范围内
+            if (messageHistory.length > 10) {
+                messageHistory = messageHistory.slice(-10);
+            }
+        }
+
+        // 修改 addMessage 函数以支持历史记录
+        function addMessage(text, type, avatar) {
+            // 更新消息历史
+            updateMessageHistory(type === 'sent' ? 'user' : 'assistant', text);
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = text;
+
+            if (type === 'received') {
+                const avatarImg = document.createElement('img');
+                avatarImg.className = 'message-avatar';
+                avatarImg.src = avatar;
+                messageDiv.appendChild(avatarImg);
+            }
+
+            messageDiv.appendChild(messageContent);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 修改 sendMessage 函数以支持 API 调用
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            
+            // 使用保存的当前角色头像
+            addMessage(text, 'sent');
+            messageInput.value = '';
+
+            try {
+                // 准备发送给 API 的数据
+                const messages = [
+                    {
+                        role: "system",
+                        content: currentCharacterConfig.systemPrompt
+                    },
+                    {
+                        role: "user",
+                        content: text
+                    }
+                ];
+
+                // 调用 API
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-reasoner",
+                        messages: messages,
+                        temperature: currentCharacterConfig.temperature
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API 请求失败');
+                }
+
+                const data = await response.json();
+                const aiResponse = data.choices[0].message.content;
+
+                // 使用保存的当前角色头像
+                addMessage(aiResponse, 'received', currentCharacterImage);
+
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('抱歉，我现在遇到了一些问题，请稍后再试。', 'received', currentCharacterImage);
+            }
+        }
+
+        // 按回车发送消息
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
